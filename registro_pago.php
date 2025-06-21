@@ -157,7 +157,6 @@ require_once __DIR__ . '/auth_middleware.php';
         </section>
     </main>
 
-    <!-- Modal para Confirmación/Error -->
     <div id="responseModal" class="modal" style="display: none;">
         <div class="modal-content">
             <span class="close-button" onclick="closeModal()">&times;</span>
@@ -174,13 +173,11 @@ require_once __DIR__ . '/auth_middleware.php';
     <script src="js/registro_pago.js"></script>
     <script>
         // Funciones globales para HTML
-        function logout() {
-            alert('Has cerrado sesión. Redirigiendo al login...');
-            window.location.href = 'login.php';
-        }
         function closeModal() {
             document.getElementById('responseModal').style.display = 'none';
         }
+        // ATENCIÓN: La función logout ya NO se define aquí.
+        // Se define en js/registro_pago.js y es accesible globalmente.
     </script>
 </body>
 </html>

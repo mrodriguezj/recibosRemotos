@@ -92,7 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Asumiendo que api/clientes/listar.php está en la misma carpeta que api/pagos/registrar.php,
             // y que este js está en js/
-            // Entonces la URL relativa sería '../../api/clientes/listar.php' o '/api/clientes/listar.php' si la raíz es pública
             const response = await fetch('listar.php'); // Ajusta esta URL si tu API está en otra parte
             const result = await response.json();
 
@@ -164,7 +163,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // No enviamos estado_pago, fecha_creacion, ultima_actualizacion, usuario_realizador_id
         // porque se manejan en el backend (SP)
-        delete data.numero_pago_registro; // Este campo no existe en la tabla pagos, eliminar si viene por algún error de nombre anterior
+        // Eliminar numero_pago_registro si aún existe del HTML previo
+        delete data.numero_pago_registro; 
 
         try {
             const response = await fetch('registrar.php', { // URL al API de registro de pagos
@@ -202,4 +202,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Carga inicial de datos ---
     fetchAndPopulateClients(); // Cargar clientes al cargar la página
+
+
+    // FUNCIÓN LOGOUT - Llama a la API de revocación de token
+    window.logout = async () => {
+        try {
+            const response = await fetch('logout.php', { // URL a tu API de logout
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({})
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                alert(result.message || 'Sesión cerrada exitosamente.');
+            } else {
+                alert('Error al cerrar sesión: ' + (result.message || 'Inténtalo de nuevo.'));
+            }
+        } catch (error) {
+            console.error('Error al comunicarse con la API de logout:', error);
+            alert('Error de conexión al cerrar sesión. Inténtalo de nuevo.');
+        } finally {
+            window.location.href = 'login.php';
+        }
+    };
 });

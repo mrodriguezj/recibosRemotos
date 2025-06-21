@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
             minute: 'numeric',
             second: 'numeric',
             timeZoneName: 'short',
-            timeZone: 'America/Cancun' //
+            timeZone: 'America/Cancun' // Ya tienes Cancún, Q.Roo como ubicación
         };
         document.getElementById("fecha-ejecucion").innerText = "Actualizado el: " +
             now.toLocaleString("es-MX", options);
@@ -41,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const offset = (currentPage - 1) * itemsPerPage;
 
         // Construir URL de la API
-        // Asegúrate de que la URL apunte correctamente a tu script PHP (api/pagos.php)
         const apiUrl = `pagos.php?limit=${itemsPerPage}&offset=${offset}&page=${currentPage}&search=${searchTerm}&sort_column=${currentSortColumn}&sort_direction=${currentSortDirection}`;
 
         try {
@@ -115,8 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     nextPageBtn.addEventListener('click', () => {
-        // La condición para deshabilitar nextPageBtn ya se maneja en updatePaginationControls
-        // Simplemente llamamos a loadPayments si no está deshabilitado
         if (!nextPageBtn.disabled) {
             currentPage++;
             loadPayments();
@@ -171,9 +168,31 @@ Monto: $${monto}
 (En una implementación real, esto generaría un PDF.)`);
     };
 
-    window.logout = () => {
-        alert('Has cerrado sesión. Redirigiendo al login...');
-        window.location.href = 'login.html';
+    // FUNCIÓN LOGOUT - Llama a la API de revocación de token
+    window.logout = async () => {
+        try {
+            const response = await fetch('logout.php', { // <--- ESTA ES LA URL CORRECTA AL ENDPOINT
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}) // Cuerpo vacío o con datos mínimos si la API lo espera
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                alert(result.message || 'Sesión cerrada exitosamente.');
+            } else {
+                alert('Error al cerrar sesión: ' + (result.message || 'Inténtalo de nuevo.'));
+            }
+        } catch (error) {
+            console.error('Error al comunicarse con la API de logout:', error);
+            alert('Error de conexión al cerrar sesión. Inténtalo de nuevo.');
+        } finally {
+            // Siempre redirigir al login, independientemente del resultado de la API
+            // Esto asegura que el usuario no permanezca en un área protegida si el logout falla parcialmente
+            window.location.href = 'login.php';
+        }
     };
 
     // Cargar pagos al inicio y actualizar íconos de ordenación

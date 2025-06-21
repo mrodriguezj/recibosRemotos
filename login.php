@@ -15,7 +15,6 @@ const DASHBOARD_URL = 'index.php';
 
 // Obtener el secreto de JWT del .env
 // Es CRÍTICO que JWT_SECRET en tu .env tenga un valor FUERTE y que el env_loader.php funcione correctamente.
-// Si getenv() falla, esta aplicación no funcionará correctamente o usará un secreto vacío si no se controla.
 define('JWT_SECRET', getenv('JWT_SECRET'));
 define('JWT_ALGO', 'HS256');
 
@@ -82,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 "exp" => $expirationTime,        // Expiration time: momento en que el token expira
                 "nbf" => $issueTime,             // Not before: momento antes del cual el token no puede ser aceptado
                 "data" => array(                 // Datos del usuario (no sensibles)
-                    "user_id" => $user['usuario_id'], // Cambiado de 'usuario_id' a 'user_id' para consistencia con auth_middleware
+                    "user_id" => $user['usuario_id'],
                     "nombre_usuario" => $user['nombre_usuario'],
                     "nombre_completo" => $user['nombre_completo'],
                     "rol" => $user['rol']
@@ -91,9 +90,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $jwt = JWT::encode($payload, JWT_SECRET, JWT_ALGO);
 
+            // --- NUEVO CÓDIGO AQUÍ: Registrar el token en la base de datos ---
+            $ip_address = $_SERVER['REMOTE_ADDR'] ?? 'N/A'; // IP del cliente
+            $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'N/A'; // User Agent del cliente
+
+            $stmt_register_token = $conn->prepare("CALL sp_registrar_token_sesion(?, ?, FROM_UNIXTIME(?), ?, ?)");
+            $stmt_register_token->bindParam(1, $user['usuario_id'], PDO::PARAM_INT);
+            $stmt_register_token->bindParam(2, $jwt, PDO::PARAM_STR);
+            $stmt_register_token->bindParam(3, $expirationTime, PDO::PARAM_INT); // FROM_UNIXTIME espera un timestamp UNIX
+            $stmt_register_token->bindParam(4, $ip_address, PDO::PARAM_STR);
+            $stmt_register_token->bindParam(5, $user_agent, PDO::PARAM_STR);
+            $stmt_register_token->execute();
+            $stmt_register_token->closeCursor(); // CRÍTICO: cerrar el cursor después de ejecutar un SP
+
+            // --- FIN NUEVO CÓDIGO ---
+
             // 4. Establecer el Token JWT en una cookie HTTP-Only (más seguro para navegadores)
             setcookie('jwt_token', $jwt, [
-                'expires' => $expirationTime, // Fecha de expiración de la cookie
+                'expires' => $expirationTime,
                 'path' => '/', // Disponible en todo el sitio
                 'httponly' => true, // La cookie no es accesible vía JavaScript
                 // 'secure' => true, // Habilitar en producción con HTTPS (solo se envía sobre HTTPS)
@@ -127,6 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $response["message"] = "Error en el servidor: " . $e->getMessage();
         // En un entorno de producción, loggear $e->getMessage() y mostrar un mensaje genérico.
     } finally {
+        // Asegurarse de que la conexión se cierre
         if ($conn) {
             $database->closeConnection();
         }

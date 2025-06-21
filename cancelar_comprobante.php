@@ -6,7 +6,7 @@
 require_once __DIR__ . '/auth_middleware.php';
 
 // Si el token es válido, $user_data estará disponible aquí con los datos del usuario.
-// Puedes usar $user_data['nombre_completo'] o $user_data['rol'] si lo necesitas en el HTML.
+// Necesitaremos $user_data['user_id'] para registrar quién cancela un pago.
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -53,6 +53,19 @@ require_once __DIR__ . '/auth_middleware.php';
             text-decoration: none;
             cursor: pointer;
         }
+        /* Estilos para validación */
+        textarea:invalid:not(:placeholder-shown) {
+            border-color: #ef4444; /* red-500 */
+        }
+        textarea:invalid:not(:placeholder-shown) + .validation-message {
+            display: block;
+            color: #ef4444; /* red-500 */
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+        .validation-message {
+            display: none;
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased">
@@ -82,14 +95,16 @@ require_once __DIR__ . '/auth_middleware.php';
             <form id="buscarComprobanteForm" class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 mb-6">
                 <div class="md:col-span-1">
                     <label for="buscar_id_lote" class="block text-sm font-medium text-gray-700 mb-1">ID de Lote</label>
-                    <input type="text" id="buscar_id_lote" name="buscar_id_lote" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Ej: LOTE-001">
+                    <input type="number" id="buscar_id_lote" name="buscar_id_lote" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Ej: 101" min="1">
+                    <span class="validation-message">Debe ser un número entero positivo.</span>
                 </div>
                 <div class="md:col-span-1">
-                    <label for="buscar_numero_pago" class="block text-sm font-medium text-gray-700 mb-1">Número de Pago</label>
-                    <input type="text" id="buscar_numero_pago" name="buscar_numero_pago" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Ej: 1, 5, Mensualidad 3">
+                    <label for="buscar_pago_id" class="block text-sm font-medium text-gray-700 mb-1">ID de Pago</label>
+                    <input type="number" id="buscar_pago_id" name="buscar_pago_id" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Ej: 1" min="1">
+                    <span class="validation-message">Debe ser un número entero positivo.</span>
                 </div>
                 <div class="md:col-span-2 flex justify-end">
-                    <button type="button" onclick="buscarComprobante()" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                         <i class="fas fa-search mr-2"></i> Buscar
                     </button>
                 </div>
@@ -97,26 +112,33 @@ require_once __DIR__ . '/auth_middleware.php';
 
             <div id="comprobanteDetalle" class="hidden border-t border-gray-200 pt-6 mt-6">
                 <h2 class="text-xl font-semibold text-gray-800 mb-4">Detalles del Comprobante Encontrado</h2>
+                <input type="hidden" id="detalle_pago_id_oculto"> 
+                <input type="hidden" id="detalle_id_lote_oculto"> 
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2 mb-6 text-gray-700">
                     <div>
                         <p class="text-sm font-medium text-gray-500">ID Lote:</p>
                         <p id="detalle_id_lote" class="text-base font-semibold"></p>
                     </div>
                     <div>
+                        <p class="text-sm font-medium text-gray-500">ID Pago:</p>
+                        <p id="detalle_pago_id" class="text-base font-semibold"></p>
+                    </div>
+                    <div>
                         <p class="text-sm font-medium text-gray-500">Cliente:</p>
                         <p id="detalle_cliente" class="text-base"></p>
                     </div>
                     <div>
-                        <p class="text-sm font-medium text-gray-500">Número de Pago:</p>
-                        <p id="detalle_numero_pago" class="text-base"></p>
+                        <p class="text-sm font-medium text-gray-500">Fecha Esperada de Pago:</p>
+                        <p id="detalle_fecha_esperada_pago" class="text-base"></p>
                     </div>
                     <div>
-                        <p class="text-sm font-medium text-gray-500">Fecha de Pago:</p>
+                        <p class="text-sm font-medium text-gray-500">Fecha de Pago Real:</p>
                         <p id="detalle_fecha_pago" class="text-base"></p>
                     </div>
                     <div>
                         <p class="text-sm font-medium text-gray-500">Categoría:</p>
-                        <p id="detalle_categoria" class="text-base"></p>
+                        <p id="detalle_categoria_pago" class="text-base"></p>
                     </div>
                     <div>
                         <p class="text-sm font-medium text-gray-500">Monto Pagado:</p>
@@ -126,21 +148,21 @@ require_once __DIR__ . '/auth_middleware.php';
                         <p class="text-sm font-medium text-gray-500">Método de Pago:</p>
                         <p id="detalle_metodo_pago" class="text-base"></p>
                     </div>
-                    <div class="md:col-span-2">
-                        <p class="text-sm font-medium text-gray-500">Referencia/Concepto:</p>
-                        <p id="detalle_referencia_pago" class="text-base"></p>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Estado Actual:</p>
+                        <p id="detalle_estado_pago" class="text-base"></p>
                     </div>
                     <div class="md:col-span-2">
                         <p class="text-sm font-medium text-gray-500">Observaciones:</p>
-                        <p id="detalle_observaciones" class="text-base"></p>
+                        <p id="detalle_observaciones_pago" class="text-base"></p>
                     </div>
                 </div>
                 
                 <div class="flex justify-end space-x-4">
-                    <button type="button" onclick="mostrarModalConfirmacion()" class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                    <button type="button" id="btnConfirmarCancelacion" class="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
                         <i class="fas fa-trash-alt mr-2"></i> Confirmar Cancelación
                     </button>
-                    <button type="button" onclick="ocultarDetalle()" class="bg-gray-300 text-gray-800 px-6 py-2 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2">
+                    <button type="button" id="btnCancelarBusqueda" class="bg-gray-300 text-gray-800 px-6 py-2 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2">
                         Cancelar
                     </button>
                 </div>
@@ -156,121 +178,51 @@ require_once __DIR__ . '/auth_middleware.php';
 
     <div id="motivoCancelacionModal" class="modal" style="display: none;">
         <div class="modal-content">
-            <span class="close-button" onclick="cerrarModal()">&times;</span>
+            <span class="close-button" onclick="closeMotivoModal()">&times;</span>
             <h3 class="text-xl font-semibold text-gray-800 mb-4">Motivo de Cancelación</h3>
             <div class="mb-4">
-                <label for="motivo_textarea" class="block text-sm font-medium text-gray-700 mb-1">Por favor, escribe el motivo de la cancelación:</label>
-                <textarea id="motivo_textarea" rows="4" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Indica claramente la razón de la cancelación..."></textarea>
-            </div>
+                <label for="motivo_textarea" class="block text-sm font-medium text-gray-700 mb-1">Por favor, escribe el motivo de la cancelación: <span class="text-red-500">*</span></label>
+                <textarea id="motivo_textarea" rows="4" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Indica claramente la razón de la cancelación..." required></textarea>
+                <span class="validation-message">Este campo es requerido y debe tener al menos 10 caracteres.</span>
+                </div>
             <div class="flex justify-end space-x-4">
-                <button type="button" onclick="cerrarModal()" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2">
+                <button type="button" onclick="closeMotivoModal()" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2">
                     Cancelar
                 </button>
-                <button type="button" onclick="finalizarCancelacion()" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                <button type="button" id="btnFinalizarCancelacion" class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
                     Confirmar
                 </button>
             </div>
         </div>
     </div>
 
+    <div id="responseModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeResponseModal()">&times;</span>
+            <h3 id="responseModalTitle" class="text-xl font-semibold text-gray-800 mb-4"></h3>
+            <p id="responseModalMessage" class="text-gray-700 mb-4"></p>
+            <div class="flex justify-end">
+                <button onclick="closeResponseModal()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Aceptar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/cancelar_comprobante.js"></script>
     <script>
-        // Data de ejemplo (simulando una base de datos)
-        const pagosRegistrados = [
-            { id_lote: 'LOTE-001', numero_pago: '1', cliente: 'Juan Pérez', fecha_pago: '2025-06-15', categoria: 'Enganche', monto_pagado: 15000.00, metodo_pago: 'Transferencia', referencia_pago: 'TRF-12345', observaciones: 'Pago inicial completo.' },
-            { id_lote: 'LOTE-002', numero_pago: '3', cliente: 'María López', fecha_pago: '2025-06-20', categoria: 'Mensualidad', monto_pagado: 2500.00, metodo_pago: 'Deposito', referencia_pago: 'DEP-67890', observaciones: 'Mensualidad de Junio.' },
-            { id_lote: 'LOTE-001', numero_pago: '2', cliente: 'Juan Pérez', fecha_pago: '2025-07-01', categoria: 'Mensualidad', monto_pagado: 2500.00, metodo_pago: 'Efectivo', referencia_pago: '', observaciones: 'Pago de Julio.' },
-            { id_lote: 'LOTE-003', numero_pago: '1', cliente: 'Carlos Gómez', fecha_pago: '2025-06-10', categoria: 'Contado', monto_pagado: 50000.00, metodo_pago: 'Transferencia', referencia_pago: 'TRF-ABCDE', observaciones: 'Pago de contado por propiedad X.' },
-            { id_lote: 'LOTE-002', numero_pago: '2', cliente: 'María López', fecha_pago: '2025-05-20', categoria: 'Mensualidad', monto_pagado: 2500.00, metodo_pago: 'Transferencia', referencia_pago: 'TRF-09876', observaciones: 'Mensualidad de Mayo.' },
-        ];
-
-        let pagoSeleccionadoParaCancelar = null; // Variable para almacenar el pago actual
-
-        function buscarComprobante() {
-            const buscarIdLote = document.getElementById('buscar_id_lote').value.trim();
-            const buscarNumeroPago = document.getElementById('buscar_numero_pago').value.trim();
-            const comprobanteDetalleDiv = document.getElementById('comprobanteDetalle');
-            const noResultadosDiv = document.getElementById('noResultados');
-
-            // Ocultar resultados anteriores
-            comprobanteDetalleDiv.classList.add('hidden');
-            noResultadosDiv.classList.add('hidden');
-            pagoSeleccionadoParaCancelar = null; // Resetear el pago seleccionado
-
-            // Simulación de búsqueda en datos estáticos
-            const encontrado = pagosRegistrados.find(pago =>
-                (buscarIdLote === '' || String(pago.id_lote).toLowerCase() === buscarIdLote.toLowerCase()) && // id_lote es string en este demo
-                (buscarNumeroPago === '' || String(pago.numero_pago).toLowerCase() === buscarNumeroPago.toLowerCase())
-            );
-
-            if (encontrado) {
-                pagoSeleccionadoParaCancelar = encontrado; // Almacenar el pago encontrado
-
-                document.getElementById('detalle_id_lote').innerText = encontrado.id_lote;
-                document.getElementById('detalle_cliente').innerText = encontrado.cliente;
-                document.getElementById('detalle_numero_pago').innerText = encontrado.numero_pago;
-                document.getElementById('detalle_fecha_pago').innerText = encontrado.fecha_pago;
-                document.getElementById('detalle_categoria').innerText = encontrado.categoria;
-                document.getElementById('detalle_monto_pagado').innerText = `$${parseFloat(encontrado.monto_pagado).toFixed(2)}`;
-                document.getElementById('detalle_metodo_pago').innerText = encontrado.metodo_pago;
-                document.getElementById('detalle_referencia_pago').innerText = encontrado.referencia_pago || 'N/A';
-                document.getElementById('detalle_observaciones').innerText = encontrado.observaciones || 'Sin observaciones';
-
-                comprobanteDetalleDiv.classList.remove('hidden');
-            } else {
-                noResultadosDiv.classList.remove('hidden');
-            }
+        // Funciones globales para HTML
+        function closeResponseModal() { // Renombrado para evitar conflicto
+            document.getElementById('responseModal').style.display = 'none';
         }
-
-        function mostrarModalConfirmacion() {
-            if (!pagoSeleccionadoParaCancelar) {
-                alert('Por favor, busca y selecciona un comprobante primero.');
-                return;
-            }
-            document.getElementById('motivo_textarea').value = ''; // Limpiar el textarea al abrir
-            document.getElementById('motivoCancelacionModal').style.display = 'flex'; // Mostrar el modal
+        function closeMotivoModal() { // Para el modal de motivo específico
+            document.getElementById('motivoCancelacionModal').style.display = 'none';
+            document.getElementById('motivo_textarea').value = '';
+            document.getElementById('motivo_textarea').classList.remove('border-red-500'); // Limpiar validación visual
+            document.getElementById('motivo_textarea').nextElementSibling.style.display = 'none'; // Ocultar mensaje
         }
-
-        function cerrarModal() {
-            document.getElementById('motivoCancelacionModal').style.display = 'none'; // Ocultar el modal
-            document.getElementById('motivo_textarea').value = ''; // Limpiar el textarea
-        }
-
-        function finalizarCancelacion() {
-            const motivo = document.getElementById('motivo_textarea').value.trim();
-
-            if (motivo === '') {
-                alert('El motivo de cancelación no puede estar vacío. Por favor, especifica la razón.');
-                return;
-            }
-
-            // Aquí se usaría pagoSeleccionadoParaCancelar para enviar al backend
-            // Forzamos el tipo de dato de ID Lote y Numero de Pago para el alert
-            const idLote = pagoSeleccionadoParaCancelar.id_lote;
-            const numeroPago = pagoSeleccionadoParaCancelar.numero_pago;
-
-
-            alert(`Comprobante para ID Lote: ${idLote}, Número de Pago: ${numeroPago} CANCELADO exitosamente.
-Motivo: "${motivo}"
-(Simulación: En una implementación real, se enviaría al backend y se actualizaría el estado en la base de datos.)`);
-
-            cerrarModal(); // Ocultar el modal
-            ocultarDetalle(); // Ocultar los detalles del comprobante
-            // Opcional: limpiar los campos de búsqueda
-            document.getElementById('buscar_id_lote').value = '';
-            document.getElementById('buscar_numero_pago').value = '';
-        }
-
-        function ocultarDetalle() {
-            document.getElementById('comprobanteDetalle').classList.add('hidden');
-            document.getElementById('noResultados').classList.add('hidden');
-            pagoSeleccionadoParaCancelar = null; // Asegurarse de que no haya pago seleccionado
-        }
-
-        // Simple logout function for demonstration
-        function logout() {
-            alert('Has cerrado sesión. Redirigiendo al login...');
-            window.location.href = 'login.php'; // Redirect to login page
-        }
+        // ATENCIÓN: La función logout ya NO se define aquí.
+        // Se define en js/cancelar_comprobante.js y es accesible globalmente (window.logout).
     </script>
 </body>
 </html>

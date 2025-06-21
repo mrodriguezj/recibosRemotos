@@ -46,8 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cleanedValue = originalValue.replace(/[^A-Za-zÁáÉéÍíÓóÚúÜüÑñ\s]/g, '');
         } else if (fieldName === 'telefono') {
             cleanedValue = originalValue.replace(/[^0-9]/g, '');
-        } else if (fieldName === 'curp' || fieldName === 'rfc' || fieldName === 'ine') {
-            // Solo letras y números para CURP, RFC, INE
+        } else if (fieldName === 'curp' || fieldName === 'rfc' || fieldName === 'ine') { // CURP, RFC, INE ahora manejan aquí
             cleanedValue = originalValue.replace(/[^A-Za-z0-9]/g, '');
         }
         // Correo electrónico y dirección se manejan de forma diferente.
@@ -163,3 +162,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// AÑADIDO: FUNCIÓN LOGOUT para ser accesible desde el HTML
+window.logout = async () => {
+    try {
+        const response = await fetch('logout.php', { // URL a tu API de logout
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({})
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            alert(result.message || 'Sesión cerrada exitosamente.');
+        } else {
+            alert('Error al cerrar sesión: ' + (result.message || 'Inténtalo de nuevo.'));
+        }
+    } catch (error) {
+        console.error('Error al comunicarse con la API de logout:', error);
+        alert('Error de conexión al cerrar sesión. Inténtalo de nuevo.');
+    } finally {
+        window.location.href = 'login.php';
+    }
+};
+
+// closeResponseModal se define globalmente en el HTML de agregar_cliente.php

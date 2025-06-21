@@ -165,10 +165,8 @@ require_once __DIR__ . '/auth_middleware.php';
     <script src="js/agregar_cliente.js"></script>
     <script>
         // Funciones globales para HTML
-        function logout() {
-            alert('Has cerrado sesión. Redirigiendo al login...');
-            window.location.href = 'login.php';
-        }
+        // ATENCIÓN: ESTA FUNCIÓN LOGOUT DEBE LLAMAR A LA API, NO SOLO REDIRIGIR
+        // Ha sido movida a js/agregar_cliente.js
         function closeModal() {
             document.getElementById('responseModal').style.display = 'none';
         }

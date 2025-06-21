@@ -12,32 +12,30 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use Firebase\JWT\ExpiredException; // Para manejar tokens expirados
+use Firebase\JWT\ExpiredException;
+use Firebase\JWT\SignatureInvalidException; // Añadir para errores de firma
 
 // Definir la URL del login
 const LOGIN_URL = 'login.php';
 
 // Obtener el secreto de JWT del .env.
-// Es CRÍTICO que JWT_SECRET en tu .env tenga un valor FUERTE y que el env_loader.php funcione.
-// Si getenv() falla, esto podría resultar en un secreto vacío o un error si no se maneja adecuadamente.
 define('JWT_SECRET', getenv('JWT_SECRET'));
 define('JWT_ALGO', 'HS256');
 
 // Función para redirigir al login
 function redirectToLogin($message = '') {
-    // Puedes pasar un mensaje de error o razón de redirección
+    // Limpiar la cookie JWT al redirigir al login (por si el token es inválido/expirado/revocado)
+    setcookie('jwt_token', '', time() - 3600, '/', '', false, true); // Expira en el pasado, HttpOnly
     header('Location: ' . LOGIN_URL . ($message ? '?error=' . urlencode($message) : ''));
     exit();
 }
 
 // Función para verificar el token JWT
 function verifyJwtToken() {
-    // 1. Intentar obtener el token de las cookies (más seguro y común para JWT en navegadores)
     $jwt = null;
     if (isset($_COOKIE['jwt_token'])) {
         $jwt = $_COOKIE['jwt_token'];
     }
-    // 2. Si no está en cookies, intentar de la cabecera Authorization (común para APIs o pruebas con Postman)
     if (!$jwt && isset($_SERVER['HTTP_AUTHORIZATION'])) {
         $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
         if (preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
@@ -46,69 +44,64 @@ function verifyJwtToken() {
     }
 
     if (!$jwt) {
-        // No hay token, redirigir al login
         redirectToLogin('No hay sesión iniciada.');
     }
 
     try {
-        // Decodificar y verificar el token
-        // Usar Key::class para JWT v6+
-        $decoded = JWT::decode($jwt, new Key(JWT_SECRET, JWT_ALGO));
+        $key = new Key(JWT_SECRET, JWT_ALGO);
+        $decoded = JWT::decode($jwt, $key);
 
-        // Puedes añadir más verificaciones aquí, como:
-        // - Si el usuario_id del token existe en tu BD (ej: si el usuario fue eliminado)
-        // - Si el token está en tu lista de tokens revocados (si implementas esa tabla y lógica)
+        // --- INICIO: VERIFICACIÓN ADICIONAL EN BASE DE DATOS (REVOCACIÓN) ---
+        $database_check = new Database(); // Nueva instancia para la verificación
+        $conn_check = $database_check->getConnection();
+
+        $stmt_check_revoked = $conn_check->prepare("SELECT revocado FROM tokens_sesion WHERE token_valor = ? LIMIT 1");
+        $stmt_check_revoked->bindParam(1, $jwt, PDO::PARAM_STR);
+        $stmt_check_revoked->execute();
+        $is_revoked = $stmt_check_revoked->fetchColumn(); // Obtiene el valor de 'revocado'
+        $stmt_check_revoked->closeCursor();
+        $database_check->closeConnection(); // Cerrar conexión de verificación
+
+        if ($is_revoked === 1) { // tinyint(1) en MySQL devuelve 1 para TRUE, 0 para FALSE
+            redirectToLogin('Sesión revocada. Por favor, inicia sesión de nuevo.');
+        }
+        // --- FIN: VERIFICACIÓN ADICIONAL EN BASE DE DATOS ---
+
+        // Verificar primer_login_requiere_cambio
+        // Este bloque es importante si un admin marca la cuenta para un cambio forzado DESPUÉS del login inicial
+        // y el token sigue siendo válido pero ahora requiere cambio.
+        // Solo lo hacemos si NO estamos ya en la página de cambio de contraseña forzado.
+        if (basename($_SERVER['PHP_SELF']) !== 'cambiar_contrasena_forzado.php') {
+            $database_check_pass = new Database();
+            $conn_check_pass = $database_check_pass->getConnection();
+            $stmt_check_pass = $conn_check_pass->prepare("SELECT primer_login_requiere_cambio FROM usuarios WHERE usuario_id = ?");
+            $stmt_check_pass->bindParam(1, $decoded->data->user_id, PDO::PARAM_INT);
+            $stmt_check_pass->execute();
+            $needs_change = $stmt_check_pass->fetchColumn();
+            $stmt_check_pass->closeCursor();
+            $database_check_pass->closeConnection();
+
+            if ($needs_change === 1) {
+                redirectToLogin('Debes cambiar tu contraseña.');
+            }
+        }
+
 
         // Devolver los datos del token decodificado como array asociativo
-        return (array) $decoded->data; // Asegúrate de acceder a los datos dentro del 'data' payload
+        return (array) $decoded->data;
 
     } catch (ExpiredException $e) {
-        // Token expirado
-        // Limpiar la cookie para asegurar que el usuario no quede en un bucle si el JS no lo hace
-        setcookie('jwt_token', '', time() - 3600, '/');
         redirectToLogin('Sesión expirada. Por favor, inicia sesión de nuevo.');
+    } catch (SignatureInvalidException $e) {
+        error_log("Error de firma JWT: " . $e->getMessage()); // Log para errores de firma
+        redirectToLogin('Firma de sesión inválida. Por favor, inicia sesión de nuevo.');
     } catch (Exception $e) {
-        // Otro error de verificación (firma inválida, token corrupto, etc.)
-        error_log("Error de verificación JWT: " . $e->getMessage() . " - Token: " . ($jwt ?? 'N/A')); // Loggear el error completo
-        // Limpiar la cookie también en caso de token inválido
-        setcookie('jwt_token', '', time() - 3600, '/');
+        error_log("Error de verificación JWT general: " . $e->getMessage());
         redirectToLogin('Token de sesión inválido. Por favor, inicia sesión de nuevo.');
     }
 }
 
 // Ejecutar la verificación si la página actual no es la de login
-// Basename para obtener solo el nombre del archivo (ej: index.php)
 if (basename($_SERVER['PHP_SELF']) !== basename(LOGIN_URL)) {
-    // $user_data contendrá los datos del usuario del token si es válido
-    // o redirigirá al login si no lo es
-    $user_data = verifyJwtToken();
-
-    // Opcional: Re-validar si el usuario requiere cambio de contraseña y redirigir
-    // Esto es especialmente útil si la sesión se mantiene activa pero el administrador
-    // marca la cuenta para un cambio de contraseña forzado después del login inicial.
-    // (Solo haz esto si NO estás en cambiar_contrasena_forzado.php ya)
-    if (basename($_SERVER['PHP_SELF']) !== 'cambiar_contrasena_forzado.php') {
-        $database_check = new Database(); // Crear una nueva instancia de Database
-        $conn_check = null;
-        try {
-            $conn_check = $database_check->getConnection();
-            $stmt_check = $conn_check->prepare("SELECT primer_login_requiere_cambio FROM usuarios WHERE usuario_id = ?");
-            $stmt_check->bindParam(1, $user_data['user_id'], PDO::PARAM_INT);
-            $stmt_check->execute();
-            $needs_change = $stmt_check->fetchColumn();
-            $stmt_check->closeCursor();
-
-            if ($needs_change && $needs_change == 1) { // MySQL devuelve 1 para TRUE
-                redirectToLogin('Debes cambiar tu contraseña.'); // O redirigir directamente a cambiar_contrasena_forzado.php
-                                                                // pero redirección via login.php con error es más fácil de manejar.
-            }
-        } catch (Exception $e) {
-            error_log("Error al verificar primer_login_requiere_cambio en middleware: " . $e->getMessage());
-            redirectToLogin('Error interno de autenticación.');
-        } finally {
-            if ($conn_check) {
-                $database_check->closeConnection();
-            }
-        }
-    }
+    $user_data = verifyJwtToken(); // Si es válido, $user_data estará aquí
 }
