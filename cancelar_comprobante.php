@@ -1,3 +1,13 @@
+<?php
+// cancelar_comprobante.php
+
+// ESTA ES LA PRIMERA LÍNEA DEL ARCHIVO
+// AJUSTA LA RUTA SI auth_middleware.php NO ESTÁ EN EL MISMO DIRECTORIO
+require_once __DIR__ . '/auth_middleware.php';
+
+// Si el token es válido, $user_data estará disponible aquí con los datos del usuario.
+// Puedes usar $user_data['nombre_completo'] o $user_data['rol'] si lo necesitas en el HTML.
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -181,14 +191,15 @@
             const comprobanteDetalleDiv = document.getElementById('comprobanteDetalle');
             const noResultadosDiv = document.getElementById('noResultados');
 
-            // Ocultar resultados anteriores y limpiar
+            // Ocultar resultados anteriores
             comprobanteDetalleDiv.classList.add('hidden');
             noResultadosDiv.classList.add('hidden');
             pagoSeleccionadoParaCancelar = null; // Resetear el pago seleccionado
 
+            // Simulación de búsqueda en datos estáticos
             const encontrado = pagosRegistrados.find(pago =>
-                (buscarIdLote === '' || pago.id_lote.toLowerCase() === buscarIdLote.toLowerCase()) &&
-                (buscarNumeroPago === '' || pago.numero_pago.toLowerCase() === buscarNumeroPago.toLowerCase())
+                (buscarIdLote === '' || String(pago.id_lote).toLowerCase() === buscarIdLote.toLowerCase()) && // id_lote es string en este demo
+                (buscarNumeroPago === '' || String(pago.numero_pago).toLowerCase() === buscarNumeroPago.toLowerCase())
             );
 
             if (encontrado) {
@@ -199,7 +210,7 @@
                 document.getElementById('detalle_numero_pago').innerText = encontrado.numero_pago;
                 document.getElementById('detalle_fecha_pago').innerText = encontrado.fecha_pago;
                 document.getElementById('detalle_categoria').innerText = encontrado.categoria;
-                document.getElementById('detalle_monto_pagado').innerText = `$${encontrado.monto_pagado.toFixed(2)}`;
+                document.getElementById('detalle_monto_pagado').innerText = `$${parseFloat(encontrado.monto_pagado).toFixed(2)}`;
                 document.getElementById('detalle_metodo_pago').innerText = encontrado.metodo_pago;
                 document.getElementById('detalle_referencia_pago').innerText = encontrado.referencia_pago || 'N/A';
                 document.getElementById('detalle_observaciones').innerText = encontrado.observaciones || 'Sin observaciones';
@@ -258,7 +269,7 @@ Motivo: "${motivo}"
         // Simple logout function for demonstration
         function logout() {
             alert('Has cerrado sesión. Redirigiendo al login...');
-            window.location.href = 'login.html'; // Redirect to login page
+            window.location.href = 'login.php'; // Redirect to login page
         }
     </script>
 </body>
