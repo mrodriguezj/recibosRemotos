@@ -128,7 +128,7 @@
                     <textarea id="direccion" name="direccion" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Calle, Número, Colonia, Ciudad, Estado, C.P."></textarea>
                 </div>
                 <div class="md:col-span-2 flex justify-end space-x-4">
-                    <button type="button" onclick="window.location.href='index.html'" class="bg-gray-300 text-gray-800 px-6 py-2 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2">
+                    <button type="button" onclick="window.location.href='index.php'" class="bg-gray-300 text-gray-800 px-6 py-2 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2">
                         Cancelar
                     </button>
                     <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
