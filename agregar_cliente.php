@@ -1,3 +1,13 @@
+<?php
+// agregar_cliente.php
+
+// ESTA ES LA PRIMERA LÍNEA DEL ARCHIVO
+// AJUSTA LA RUTA SI auth_middleware.php NO ESTÁ EN EL MISMO DIRECTORIO
+require_once __DIR__ . '/auth_middleware.php';
+
+// Si el token es válido, $user_data estará disponible aquí con los datos del usuario.
+// Puedes usar $user_data['nombre_completo'] o $user_data['rol'] si lo necesitas en el HTML.
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -157,7 +167,7 @@
         // Funciones globales para HTML
         function logout() {
             alert('Has cerrado sesión. Redirigiendo al login...');
-            window.location.href = 'login.html';
+            window.location.href = 'login.php';
         }
         function closeModal() {
             document.getElementById('responseModal').style.display = 'none';
