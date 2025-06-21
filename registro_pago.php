@@ -1,3 +1,13 @@
+<?php
+// registro_pago.php
+
+// ESTA ES LA PRIMERA LÍNEA DEL ARCHIVO
+// AJUSTA LA RUTA SI auth_middleware.php NO ESTÁ EN EL MISMO DIRECTORIO
+require_once __DIR__ . '/auth_middleware.php';
+
+// Si el token es válido, $user_data estará disponible aquí con los datos del usuario.
+// Puedes usar $user_data['nombre_completo'] o $user_data['rol'] si lo necesitas en el HTML.
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -7,7 +17,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
-        /* Estilos personalizados si son necesarios */
+        /* Custom styles if needed, similar to index.php or specific to this page */
     </style>
 </head>
 <body class="bg-gray-100 font-sans antialiased">
@@ -62,13 +72,10 @@
                     </select>
                 </div>
                 <div class="md:col-span-1">
-                    <label for="metodo_pago_registro" class="block text-sm font-medium text-gray-700 mb-1">Método de Pago</label>
+                    <label for="metodo_pago_registro" class="block text-sm font-medium text-gray-700 mb-1">Método de Pago:</label>
                     <select id="metodo_pago_registro" name="metodo_pago_registro" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Seleccionar método</option>
-                        <option value="Deposito">Depósito</option>
-                        <option value="Efectivo">Efectivo</option>
-                        <option value="Transferencia">Transferencia</option>
-                        <option value="Tarjeta">Tarjeta de Crédito/Débito</option>
+                        <option value="EFECTIVO">Efectivo</option>
                     </select>
                 </div>
                 <div class="md:col-span-1">
@@ -84,10 +91,10 @@
                     <textarea id="observaciones" name="observaciones" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Cualquier nota adicional sobre el pago"></textarea>
                 </div>
                 <div class="md:col-span-2 flex justify-end space-x-4">
-                    <button type="button" class="bg-gray-300 text-gray-800 px-6 py-2 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2">
+                    <button type="button" onclick="window.location.href='index.php'" class="bg-gray-300 text-gray-800 px-6 py-2 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2">
                         Cancelar
                     </button>
-                    <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
                         <i class="fas fa-save mr-2"></i> Registrar Comprobante
                     </button>
                 </div>
@@ -99,7 +106,7 @@
         // Simple logout function for demonstration
         function logout() {
             alert('Has cerrado sesión. Redirigiendo al login...');
-            window.location.href = 'login.html'; // Redirect to login page
+            window.location.href = 'login.php'; // Redirect to login page
         }
     </script>
 </body>
