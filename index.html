@@ -105,7 +105,7 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort-by="id_lote">
                                 ID Lote <span class="sort-icon fas fa-sort text-gray-400"></span>
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort-by="cliente">
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort-by="cliente_id">
                                 Cliente <span class="sort-icon fas fa-sort text-gray-400"></span>
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort-by="monto_pagado">
@@ -114,10 +114,10 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort-by="fecha_pago">
                                 Fecha Pago <span class="sort-icon fas fa-sort text-gray-400"></span>
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort-by="categoria">
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort-by="categoria_pago">
                                 Categoría <span class="sort-icon fas fa-sort text-gray-400"></span>
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort-by="estado">
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort-by="estado_pago">
                                 Estado <span class="sort-icon fas fa-sort text-gray-400"></span>
                             </th>
                             <th scope="col" class="relative px-6 py-3">
@@ -126,189 +126,24 @@
                         </tr>
                     </thead>
                     <tbody id="ultimos-pagos-body" class="bg-white divide-y divide-gray-200">
-                        </tbody>
+                        <tr><td colspan="7" class="text-center py-4 text-gray-500">Cargando datos...</td></tr>
+                    </tbody>
                 </table>
             </div>
+
+            <nav class="mt-4 flex items-center justify-between">
+                <div id="pagination-info" class="text-sm text-gray-700">
+                    Mostrando <span id="current-page-start">0</span> a <span id="current-page-end">0</span> de <span id="total-results">0</span> resultados
+                </div>
+                <div class="flex-1 flex justify-end">
+                    <button id="prevPageBtn" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Anterior</button>
+                    <button id="nextPageBtn" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Siguiente</button>
+                </div>
+            </nav>
         </section>
 
     </main>
 
-    <script>
-        // Datos estáticos para la tabla (no cambian al refrescar)
-        let allPayments = [
-            { id_lote: 'LOTE-001', cliente: 'Juan Pérez', monto_pagado: 1500.00, fecha_pago: '2025-06-18', categoria: 'Mensualidad', estado: 'Vigente' },
-            { id_lote: 'LOTE-005', cliente: 'María López', monto_pagado: 800.50, fecha_pago: '2025-06-19', categoria: 'Anualidad', estado: 'Vigente' },
-            { id_lote: 'LOTE-002', cliente: 'Carlos Gómez', monto_pagado: 2500.00, fecha_pago: '2025-06-17', categoria: 'Enganche', estado: 'Vigente' },
-            { id_lote: 'LOTE-010', cliente: 'Ana Torres', monto_pagado: 300.00, fecha_pago: '2025-06-15', categoria: 'Mensualidad', estado: 'Cancelado' },
-            { id_lote: 'LOTE-003', cliente: 'Luis Ramirez', monto_pagado: 1200.75, fecha_pago: '2025-06-16', categoria: 'Contado', estado: 'Vigente' },
-            { id_lote: 'LOTE-007', cliente: 'Sofía García', monto_pagado: 950.00, fecha_pago: '2025-06-14', categoria: 'Mensualidad', estado: 'Vigente' },
-            { id_lote: 'LOTE-004', cliente: 'Pedro Martínez', monto_pagado: 4500.00, fecha_pago: '2025-06-13', categoria: 'Anualidad', estado: 'Vigente' },
-            { id_lote: 'LOTE-006', cliente: 'Laura Rodríguez', monto_pagado: 600.00, fecha_pago: '2025-06-12', categoria: 'Mensualidad', estado: 'Cancelado' },
-            { id_lote: 'LOTE-008', cliente: 'Diego Sánchez', monto_pagado: 1800.00, fecha_pago: '2025-06-11', categoria: 'Enganche', estado: 'Vigente' },
-            { id_lote: 'LOTE-009', cliente: 'Elena Fernández', monto_pagado: 700.25, fecha_pago: '2025-06-10', categoria: 'Mensualidad', estado: 'Vigente' },
-            // Puedes añadir más datos estáticos aquí si deseas probar la paginación o el filtro con más elementos
-            { id_lote: 'LOTE-011', cliente: 'Roberto Castillo', monto_pagado: 2000.00, fecha_pago: '2025-06-09', categoria: 'Contado', estado: 'Vigente' },
-            { id_lote: 'LOTE-012', cliente: 'Gabriela Díaz', monto_pagado: 500.00, fecha_pago: '2025-06-08', categoria: 'Mensualidad', estado: 'Vigente' },
-            { id_lote: 'LOTE-013', cliente: 'Francisco Vargas', monto_pagado: 1000.00, fecha_pago: '2025-06-07', categoria: 'Enganche', estado: 'Cancelado' },
-        ];
-
-
-        let currentSortColumn = 'fecha_pago'; // Ordenar por fecha por defecto al cargar
-        let currentSortDirection = 'desc'; // Más recientes primero por defecto
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // Update execution date for Cancún
-            const now = new Date();
-            const options = {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: 'numeric',
-                second: 'numeric',
-                timeZoneName: 'short',
-                timeZone: 'America/Cancun'
-            };
-            document.getElementById("fecha-ejecucion").innerText = "Actualizado el: " +
-                now.toLocaleString("es-MX", options);
-
-            // Aplicar ordenación y filtro inicial
-            applySortAndFilter();
-
-            // Add event listener for search input
-            document.getElementById('searchInput').addEventListener('keyup', filterPayments);
-
-            // Add event listeners for sortable headers
-            document.querySelectorAll('th[data-sort-by]').forEach(header => {
-                header.addEventListener('click', () => {
-                    const column = header.getAttribute('data-sort-by');
-                    if (currentSortColumn === column) {
-                        currentSortDirection = (currentSortDirection === 'asc') ? 'desc' : 'asc';
-                    } else {
-                        currentSortColumn = column;
-                        currentSortDirection = 'asc';
-                    }
-                    applySortAndFilter();
-                    updateSortIcons(); // Actualizar todos los íconos de ordenación
-                });
-            });
-            updateSortIcons(); // Actualizar íconos al cargar para el ordenamiento inicial
-        });
-
-        function displayPayments(paymentsToDisplay) {
-            const ultimosPagosBody = document.getElementById('ultimos-pagos-body');
-            ultimosPagosBody.innerHTML = ''; // Clear existing rows
-
-            // Display only the first 10 results after sorting/filtering
-            const displayLimit = Math.min(paymentsToDisplay.length, 10);
-
-            if (displayLimit === 0) {
-                ultimosPagosBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">No se encontraron resultados.</td></tr>'; // Colspan ajustado a 7
-                return;
-            }
-
-            for (let i = 0; i < displayLimit; i++) {
-                const pago = paymentsToDisplay[i];
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pago.id_lote}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pago.cliente}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$${pago.monto_pagado.toFixed(2)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pago.fecha_pago}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium category-${pago.categoria}">${pago.categoria}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${pago.estado === 'Cancelado' ? 'text-red-600 font-semibold' : 'text-green-600'}">${pago.estado}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button onclick="downloadPaymentPDF('${pago.id_lote}', '${pago.cliente}', '${pago.monto_pagado.toFixed(2)}')" class="text-blue-600 hover:text-blue-900">
-                            <i class="fas fa-file-pdf mr-1"></i> Descargar PDF
-                        </button>
-                    </td>
-                `;
-                ultimosPagosBody.appendChild(row);
-            }
-        }
-
-        function filterPayments() {
-            applySortAndFilter();
-        }
-
-        function applySortAndFilter() {
-            let filteredPayments = [...allPayments]; // Start with a copy of all payments
-
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            if (searchTerm) {
-                filteredPayments = filteredPayments.filter(pago =>
-                    pago.id_lote.toLowerCase().includes(searchTerm) ||
-                    pago.cliente.toLowerCase().includes(searchTerm) ||
-                    pago.monto_pagado.toFixed(2).includes(searchTerm) ||
-                    pago.fecha_pago.includes(searchTerm) ||
-                    pago.categoria.toLowerCase().includes(searchTerm) ||
-                    pago.estado.toLowerCase().includes(searchTerm) // Incluir el estado en la búsqueda
-                );
-            }
-
-            if (currentSortColumn) {
-                filteredPayments.sort((a, b) => {
-                    let valA = a[currentSortColumn];
-                    let valB = b[currentSortColumn];
-
-                    if (currentSortColumn === 'monto_pagado') {
-                        valA = parseFloat(valA);
-                        valB = parseFloat(valB);
-                    } else if (currentSortColumn === 'fecha_pago') {
-                        valA = new Date(valA);
-                        valB = new Date(valB);
-                    } else {
-                        // Para comparaciones de cadenas, asegúrate de que sean cadenas
-                        valA = String(valA).toLowerCase();
-                        valB = String(valB).toLowerCase();
-                    }
-
-                    if (valA < valB) {
-                        return currentSortDirection === 'asc' ? -1 : 1;
-                    }
-                    if (valA > valB) {
-                        return currentSortDirection === 'asc' ? 1 : -1;
-                    }
-                    return 0;
-                });
-            } else {
-                // Orden por defecto: fecha más reciente primero
-                filteredPayments.sort((a, b) => new Date(b.fecha_pago) - new Date(a.fecha_pago));
-            }
-
-            displayPayments(filteredPayments);
-        }
-
-        function updateSortIcons() {
-            document.querySelectorAll('th[data-sort-by]').forEach(header => {
-                const icon = header.querySelector('.sort-icon');
-                if (icon) {
-                    icon.classList.remove('fa-sort-up', 'fa-sort-down');
-                    icon.classList.add('fa-sort'); // Reset to default
-                }
-                if (header.getAttribute('data-sort-by') === currentSortColumn) {
-                    icon.classList.remove('fa-sort');
-                    if (currentSortDirection === 'asc') {
-                        icon.classList.add('fa-sort-up');
-                    } else {
-                        icon.classList.add('fa-sort-down');
-                    }
-                }
-            });
-        }
-
-        function downloadPaymentPDF(loteId, cliente, monto) {
-            alert(`Simulando descarga de PDF para:
-ID Lote: ${loteId}
-Cliente: ${cliente}
-Monto: $${monto}
-(En una implementación real, esto generaría un PDF.)`);
-        }
-
-        function logout() {
-            alert('Has cerrado sesión. Redirigiendo al login...');
-            window.location.href = 'login.html'; // Redirect to login page
-        }
-    </script>
+    <script src="js/main_panel.js"></script>
 </body>
 </html>
