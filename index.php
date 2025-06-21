@@ -55,7 +55,7 @@
 
     <header class="bg-white shadow-sm p-4 flex justify-between items-center">
         <div class="text-xl font-bold text-gray-800">
-            <a href="index.html" class="hover:text-blue-600">CobranzaPro</a>
+            <a href="#" class="hover:text-blue-600">CobranzaPro</a>
         </div>
         <div class="flex items-center space-x-4">
             <button class="text-gray-600 hover:text-blue-500">
@@ -77,13 +77,13 @@
         <section class="bg-white p-6 rounded-lg shadow-md mb-6">
             <h2 class="text-xl font-semibold text-gray-800 mb-4">Acciones Rápidas</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <a href="agregar_cliente.html" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center text-center">
+                <a href="agregar_cliente.php" class="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex items-center justify-center text-center">
                     <i class="fas fa-user-plus mr-2"></i> Agregar Nuevo Cliente
                 </a>
-                <a href="registro_pago.html" class="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center justify-center text-center">
+                <a href="registro_pago.php" class="bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center justify-center text-center">
                     <i class="fas fa-hand-holding-usd mr-2"></i> Registrar Nuevo Pago
                 </a>
-                <a href="cancelar_comprobante.html" class="bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 flex items-center justify-center text-center">
+                <a href="cancelar_comprobante.php" class="bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 flex items-center justify-center text-center">
                     <i class="fas fa-times-circle mr-2"></i> Cancelar Comprobante
                 </a>
             </div>

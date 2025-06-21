@@ -49,7 +49,7 @@
 
     <header class="bg-white shadow-sm p-4 flex justify-between items-center">
         <div class="text-xl font-bold text-gray-800">
-            <a href="index.html" class="hover:text-blue-600">CobranzaPro</a>
+            <a href="index.php" class="hover:text-blue-600">CobranzaPro</a>
         </div>
         <div class="flex items-center space-x-4">
             <button class="text-gray-600 hover:text-blue-500">
