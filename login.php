@@ -179,7 +179,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <a href="#" class="text-sm text-blue-600 hover:underline">¿Olvidaste tu contraseña?</a>
             </div>
             <div class="text-center mt-2">
-                <a href="registro_usuario.php" class="text-sm text-gray-600 hover:underline">¿No tienes cuenta? Regístrate aquí</a>
+                <a href="#" class="text-sm text-gray-600 hover:underline">¿No tienes cuenta? Regístrate aquí</a>
             </div>
         </form>
     </div>
