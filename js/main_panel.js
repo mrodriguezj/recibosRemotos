@@ -23,7 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Variables de estado para la paginación y ordenación ---
     let currentPage = 1;
     const itemsPerPage = 10;
-    let currentSortColumn = 'fecha_pago'; // Columna por defecto para ordenar
+    // Ajuste de columna de ordenación por defecto si se cambió el orden de visualización
+    let currentSortColumn = 'pago_id'; // Ahora ordenamos por ID Pago por defecto
     let currentSortDirection = 'desc'; // Dirección por defecto
 
     // Referencias a elementos del DOM
@@ -35,12 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Función principal para cargar y mostrar pagos ---
     const loadPayments = async () => {
-        ultimosPagosBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">Cargando datos...</td></tr>'; // Colspan 7 para la nueva columna
+        // Colspan ajustado para 8 columnas
+        ultimosPagosBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">Cargando datos...</td></tr>';
 
         const searchTerm = searchInput.value.trim();
         const offset = (currentPage - 1) * itemsPerPage;
 
-        // Construir URL de la API
+        // Construir URL de la API (pagos.php en la raíz)
         const apiUrl = `pagos.php?limit=${itemsPerPage}&offset=${offset}&page=${currentPage}&search=${searchTerm}&sort_column=${currentSortColumn}&sort_direction=${currentSortDirection}`;
 
         try {
@@ -51,12 +53,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderPayments(result.data);
                 updatePaginationControls(result.total_records, result.total_pages);
             } else {
-                ultimosPagosBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-red-500">Error al cargar datos: ${result.message}</td></tr>`;
+                // Colspan ajustado para 8 columnas
+                ultimosPagosBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-red-500">Error al cargar datos: ${result.message}</td></tr>`;
                 updatePaginationControls(0, 0);
             }
         } catch (error) {
             console.error('Error fetching payments:', error);
-            ultimosPagosBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-red-500">Error de red o servidor: ${error.message}</td></tr>`;
+            // Colspan ajustado para 8 columnas
+            ultimosPagosBody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-red-500">Error de red o servidor: ${error.message}</td></tr>`;
             updatePaginationControls(0, 0);
         }
     };
@@ -66,13 +70,15 @@ document.addEventListener('DOMContentLoaded', () => {
         ultimosPagosBody.innerHTML = ''; // Limpiar filas existentes
 
         if (pagos.length === 0) {
-            ultimosPagosBody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-gray-500">No se encontraron resultados.</td></tr>';
+            // Colspan ajustado para 8 columnas
+            ultimosPagosBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">No se encontraron resultados.</td></tr>';
             return;
         }
 
         pagos.forEach(pago => {
             const row = document.createElement('tr');
             row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pago.pago_id}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pago.id_lote}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${pago.nombres} ${pago.apellido_paterno || ''}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$${parseFloat(pago.monto_pagado).toFixed(2)}</td>
@@ -80,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium category-${pago.categoria_pago}">${pago.categoria_pago}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 ${pago.estado_pago === 'Cancelado' ? 'text-red-600 font-semibold' : 'text-green-600'}">${pago.estado_pago}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onclick="downloadPaymentPDF('${pago.id_lote}', '${pago.nombres} ${pago.apellido_paterno}', '${pago.monto_pagado}')" class="text-blue-600 hover:text-blue-900">
+                    <button onclick="downloadPaymentPDF(${pago.pago_id})" class="text-blue-600 hover:text-blue-900">
                         <i class="fas fa-file-pdf mr-1"></i> Descargar PDF
                     </button>
                 </td>
@@ -160,18 +166,19 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- Funciones externas (accesibles globalmente desde el HTML) ---
-    window.downloadPaymentPDF = (loteId, cliente, monto) => {
-        alert(`Simulando descarga de PDF para:
-ID Lote: ${loteId}
-Cliente: ${cliente}
-Monto: $${monto}
-(En una implementación real, esto generaría un PDF.)`);
+    // FUNCIÓN PARA DESCARGAR PDF (Actualizada para llamar a generar_pdf.php)
+    window.downloadPaymentPDF = (pagoId) => {
+        // Construir la URL para generar el PDF (generar_pdf.php en la raíz, como se especificó)
+        const pdfUrl = `generar_pdf.php?pago_id=${pagoId}`;
+
+        // Abrir en una nueva pestaña para descargar o visualizar
+        window.open(pdfUrl, '_blank');
     };
 
     // FUNCIÓN LOGOUT - Llama a la API de revocación de token
     window.logout = async () => {
         try {
-            const response = await fetch('logout.php', { // <--- ESTA ES LA URL CORRECTA AL ENDPOINT
+            const response = await fetch('api/auth/logout.php', { // URL a tu API de logout
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -189,8 +196,6 @@ Monto: $${monto}
             console.error('Error al comunicarse con la API de logout:', error);
             alert('Error de conexión al cerrar sesión. Inténtalo de nuevo.');
         } finally {
-            // Siempre redirigir al login, independientemente del resultado de la API
-            // Esto asegura que el usuario no permanezca en un área protegida si el logout falla parcialmente
             window.location.href = 'login.php';
         }
     };

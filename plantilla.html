@@ -36,8 +36,8 @@
         }
         .info-section h2 {
             font-size: 11pt; /* Tamaño uniforme para todos los títulos de sección */
-            color: #555; /* Color del texto grisáceo, como en tu plantilla */
-            border-bottom: 1px solid #eee; /* Borde gris, como en tu plantilla */
+            color: #555;
+            border-bottom: 1px solid #eee;
             padding-bottom: 3px;
             margin-bottom: 8px;
             font-weight: bold; /* Asegurar que sean negritas */
@@ -51,33 +51,24 @@
             width: 110px;
             color: #333;
         }
-        /* No se usa highlight-label en tu plantilla actual, pero lo dejo si se reincorpora */
-        /* .highlight-label {
-            border-bottom: 1px solid #007bff;
-            padding-bottom: 3px;
-            display: inline-block;
-            padding-right: 5px;
-            color: #007bff;
-            font-weight: bold;
-        } */
         .payment-details table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 5px;
         }
         .payment-details th, .payment-details td {
-            border: 1px solid #ddd; /* Con bordes, como en tu plantilla */
+            border: 1px solid #ddd;
             padding: 4px;
             text-align: left;
-            font-size: 10pt;
+            font-size: 10pt; /* <-- AJUSTADO: Mismo tamaño que info-item y body */
         }
         .payment-details th {
-            background-color: #f2f2f2; /* Con fondo gris, como en tu plantilla */
+            background-color: #f2f2f2;
             color: #333;
-            font-weight: bold;
+            font-weight: bold; /* Asegurar que el encabezado de la tabla sea negrita */
         }
         .total-row {
-            background-color: #e0e0e0; /* Con fondo gris, como en tu plantilla */
+            background-color: #e0e0e0;
             font-weight: bold;
         }
         .total-amount {
@@ -85,45 +76,41 @@
             font-size: 11pt;
             color: #000;
         }
-        /* AJUSTES DE ESPACIO PARA TRANSFERENCIA BANCARIA */
         .transfer-info-section {
-            margin-top: 5px; /* Reducido de 15px */
-            padding: 5px; /* Reducido de 8px */
+            margin-top: 15px;
+            padding: 8px;
             border: 1px solid #cceeff;
             background-color: #e6f7ff;
             text-align: center;
         }
         .transfer-info-section h3 {
-            font-size: 11pt; /* Sin cambios en tamaño de fuente */
+            font-size: 11pt;
             color: #0056b3;
-            margin-bottom: 4px; /* Reducido de 6px */
+            margin-bottom: 6px;
         }
         .transfer-info-section p {
-            margin-bottom: 0px; /* Reducido de 2px */
-            font-size: 8.5pt; /* Sin cambios en tamaño de fuente */
-            line-height: 1.1; /* Añadido para comprimir */
+            margin-bottom: 2px;
+            font-size: 8.5pt;
         }
-        /* AJUSTES DE ESPACIO PARA CANALES DE COMUNICACIÓN */
         .communication-channels {
-            margin-top: 5px; /* Reducido de 15px */
-            padding: 5px; /* Reducido de 8px */
+            margin-top: 15px;
+            padding: 8px;
             border: 1px solid #d4edda;
             background-color: #eaf7ed;
             text-align: center;
         }
         .communication-channels h3 {
-            font-size: 11pt; /* Sin cambios en tamaño de fuente */
+            font-size: 11pt;
             color: #155724;
-            margin-bottom: 4px; /* Reducido de 6px */
+            margin-bottom: 6px;
         }
         .communication-channels p {
-            margin-bottom: 0px; /* Reducido de 2px */
-            font-size: 8.5pt; /* Sin cambios en tamaño de fuente */
-            line-height: 1.1; /* Añadido para comprimir */
+            margin-bottom: 2px;
+            font-size: 8.5pt;
         }
         footer {
             text-align: center;
-            margin-top: 10px; /* Reducido de 20px */
+            margin-top: 20px;
             padding-top: 5px;
             border-top: 1px dashed #ccc;
             font-size: 7pt;
@@ -149,7 +136,7 @@
             <h1>COMPROBANTE DE PAGO</h1>
             <p style="margin: 0;"><strong>CobranzaPro S.A. de C.V.</strong></p>
             <p style="margin: 0;">RFC: COB1234567ABC</p>
-            <p style="margin: 0; font-size: 8pt;">Domicilio Fiscal: Calle Ficticia #123, Col. Imaginaria, Ciudad, Estado, C.P.</p>
+            <p style="margin: 0; font-size: 10pt;">Domicilio Fiscal: Calle Ficticia #123, Col. Imaginaria, Ciudad, Estado, C.P.</p>
         </header>
 
         <div class="info-section">
@@ -175,8 +162,7 @@
         </div>
 
         <div class="payment-details">
-            <h2>Detalles del Pago</h2>
-            <table>
+            <h2>Detalles del Pago</h2> <table>
                 <thead>
                     <tr>
                         <th>Categoría</th>
@@ -201,7 +187,7 @@
         </div>
 
         <div class="info-section">
-            <h2 class="text-center">¡Gracias por tu pago!</h2>
+            <h1 class="text-center">¡Gracias por tu pago!</h1>
         </div>
 
         <div class="transfer-info-section">
@@ -213,12 +199,12 @@
             <p><strong>Titular:</strong> [TITULAR_SIMULADO]</p>
         </div>
 
-        <div class="communication-channels">
+        <!--<div class="communication-channels">
             <h3>Canales de Comunicación</h3>
             <p>Para cualquier duda o aclaración sobre tu pago, contáctanos:</p>
             <p><strong>Correo Electrónico:</strong> cobranza@cobranzapro.com</p>
             <p><strong>Teléfono:</strong> (998) 123 4567</p>
-        </div>
+        </div>-->
 
         <footer>
             <p>Generado el: [FECHA_GENERACION_SISTEMA] por [NOMBRE_USUARIO_GENERADOR]</p>

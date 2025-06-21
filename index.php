@@ -1,12 +1,8 @@
 <?php
 // index.php
 
-// ESTA ES LA PRIMERA LÍNEA DEL ARCHIVO
-// AJUSTA LA RUTA SI auth_middleware.php NO ESTÁ EN EL MISMO DIRECTORIO
 require_once __DIR__ . '/auth_middleware.php';
 
-// Si el token es válido, $user_data estará disponible aquí con los datos del usuario.
-// Puedes usar $user_data['nombre_completo'] o $user_data['rol'] si lo necesitas en el HTML.
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -112,6 +108,9 @@ require_once __DIR__ . '/auth_middleware.php';
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort-by="pago_id">
+                                ID Pago <span class="sort-icon fas fa-sort text-gray-400"></span>
+                            </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" data-sort-by="id_lote">
                                 ID Lote <span class="sort-icon fas fa-sort text-gray-400"></span>
                             </th>
@@ -136,7 +135,7 @@ require_once __DIR__ . '/auth_middleware.php';
                         </tr>
                     </thead>
                     <tbody id="ultimos-pagos-body" class="bg-white divide-y divide-gray-200">
-                        <tr><td colspan="7" class="text-center py-4 text-gray-500">Cargando datos...</td></tr>
+                        <tr><td colspan="8" class="text-center py-4 text-gray-500">Cargando datos...</td></tr>
                     </tbody>
                 </table>
             </div>
