@@ -1,4 +1,10 @@
 <?php
+
+// Primera línea del archivo
+require_once __DIR__ . '/auth_middleware.php';
+// ... el resto del código HTML y PHP de la página
+
+
 // test_db_connection.php
 
 // Usamos dirname(__DIR__) para construir la ruta relativa de forma segura
