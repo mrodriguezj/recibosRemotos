@@ -6,6 +6,7 @@
 //require_once __DIR__ . '/../env_loader.php'; // Ajustado para que apunte a la raíz si env_loader.php está allí
 
 require_once __DIR__ . '/env_loader.php';
+date_default_timezone_set('America/Cancun'); // <--- AÑADIR AQUI
 
 class Database {
     private $conn;

@@ -2,7 +2,7 @@
 // api/clientes.php
 
 // AJUSTA ESTA RUTA SEGÚN LA UBICACIÓN REAL DE TU Database.php
-require_once __DIR__ . '/Database.php';
+require_once __DIR__ . '/database.php';
 
 
 header('Content-Type: application/json'); // Indicar que la respuesta es JSON

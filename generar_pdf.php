@@ -4,7 +4,7 @@
 // AJUSTA ESTAS RUTAS SEGÚN LA UBICACIÓN REAL DE TUS ARCHIVOS
 // Asume que env_loader.php, Database.php y vendor/autoload.php están en la raíz del proyecto
 require_once __DIR__ . '/env_loader.php';      // env_loader.php en la raíz
-require_once __DIR__ . '/Database.php';        // Database.php en la raíz
+require_once __DIR__ . '/database.php';        // Database.php en la raíz
 require_once __DIR__ . '/vendor/autoload.php'; // vendor/autoload.php en la raíz
 
 use Dompdf\Dompdf;
