@@ -1,31 +1,48 @@
 <?php
-// auth_middleware.php
+// auth_middleware.php (en la raíz)
 
-// Cargar variables de entorno (asume que env_loader.php está en el mismo directorio)
 require_once __DIR__ . '/env_loader.php';
-
-// Cargar clase de base de datos (asume que Database.php está en el mismo directorio)
 require_once __DIR__ . '/database.php';
-
-// Cargar la librería JWT (Composer) (asume que vendor/autoload.php está en el mismo directorio)
 require_once __DIR__ . '/vendor/autoload.php';
 
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Firebase\JWT\ExpiredException;
-use Firebase\JWT\SignatureInvalidException; // Añadir para errores de firma
+use Firebase\JWT\SignatureInvalidException; 
 
-// Definir la URL del login
 const LOGIN_URL = 'login.php';
 
-// Obtener el secreto de JWT del .env.
 define('JWT_SECRET', getenv('JWT_SECRET'));
 define('JWT_ALGO', 'HS256');
 
-// Función para redirigir al login
+// Función auxiliar para detectar si la solicitud es una API (AJAX/Fetch)
+function isApiRequest() {
+    // Comprobar el encabezado Accept
+    if (isset($_SERVER['HTTP_ACCEPT']) && strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false) {
+        return true;
+    }
+    // Comprobar el encabezado X-Requested-With (común en peticiones AJAX)
+    if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+        return true;
+    }
+    return false;
+}
+
+// Función para enviar respuesta de error y terminar la ejecución
+function sendAuthError($message, $httpCode = 401) {
+    // Si ya se enviaron encabezados (raro en este punto, pero posible), no intentes cambiarlos.
+    if (!headers_sent()) {
+        header('Content-Type: application/json');
+        http_response_code($httpCode); // Establecer el código de estado HTTP
+    }
+    echo json_encode(["success" => false, "message" => $message, "code" => $httpCode]);
+    exit();
+}
+
+// Función para redirigir al login (solo para solicitudes HTML)
 function redirectToLogin($message = '') {
-    // Limpiar la cookie JWT al redirigir al login (por si el token es inválido/expirado/revocado)
-    setcookie('jwt_token', '', time() - 3600, '/', '', false, true); // Expira en el pasado, HttpOnly
+    // Limpiar la cookie JWT al redirigir al login
+    setcookie('jwt_token', '', time() - 3600, '/', '', false, true);
     header('Location: ' . LOGIN_URL . ($message ? '?error=' . urlencode($message) : ''));
     exit();
 }
@@ -44,34 +61,38 @@ function verifyJwtToken() {
     }
 
     if (!$jwt) {
-        redirectToLogin('No hay sesión iniciada.');
+        // Si es una API, envía error JSON. Si es HTML, redirige.
+        if (isApiRequest()) {
+            sendAuthError('No hay token de sesión.');
+        } else {
+            redirectToLogin('No hay sesión iniciada.');
+        }
     }
 
     try {
         $key = new Key(JWT_SECRET, JWT_ALGO);
         $decoded = JWT::decode($jwt, $key);
 
-        // --- INICIO: VERIFICACIÓN ADICIONAL EN BASE DE DATOS (REVOCACIÓN) ---
-        $database_check = new Database(); // Nueva instancia para la verificación
+        $database_check = new Database();
         $conn_check = $database_check->getConnection();
 
         $stmt_check_revoked = $conn_check->prepare("SELECT revocado FROM tokens_sesion WHERE token_valor = ? LIMIT 1");
         $stmt_check_revoked->bindParam(1, $jwt, PDO::PARAM_STR);
         $stmt_check_revoked->execute();
-        $is_revoked = $stmt_check_revoked->fetchColumn(); // Obtiene el valor de 'revocado'
+        $is_revoked = $stmt_check_revoked->fetchColumn();
         $stmt_check_revoked->closeCursor();
-        $database_check->closeConnection(); // Cerrar conexión de verificación
+        $database_check->closeConnection();
 
-        if ($is_revoked === 1) { // tinyint(1) en MySQL devuelve 1 para TRUE, 0 para FALSE
-            redirectToLogin('Sesión revocada. Por favor, inicia sesión de nuevo.');
+        if ($is_revoked === 1) {
+            if (isApiRequest()) {
+                sendAuthError('Sesión revocada.', 401);
+            } else {
+                redirectToLogin('Sesión revocada. Por favor, inicia sesión de nuevo.');
+            }
         }
-        // --- FIN: VERIFICACIÓN ADICIONAL EN BASE DE DATOS ---
 
-        // Verificar primer_login_requiere_cambio
-        // Este bloque es importante si un admin marca la cuenta para un cambio forzado DESPUÉS del login inicial
-        // y el token sigue siendo válido pero ahora requiere cambio.
-        // Solo lo hacemos si NO estamos ya en la página de cambio de contraseña forzado.
-        if (basename($_SERVER['PHP_SELF']) !== 'cambiar_contrasena_forzado.php') {
+        // Verificar primer_login_requiere_cambio (solo para HTML, no para APIs que solo piden datos)
+        if (!isApiRequest() && basename($_SERVER['PHP_SELF']) !== 'cambiar_contrasena_forzado.php') {
             $database_check_pass = new Database();
             $conn_check_pass = $database_check_pass->getConnection();
             $stmt_check_pass = $conn_check_pass->prepare("SELECT primer_login_requiere_cambio FROM usuarios WHERE usuario_id = ?");
@@ -85,23 +106,33 @@ function verifyJwtToken() {
                 redirectToLogin('Debes cambiar tu contraseña.');
             }
         }
-
-
-        // Devolver los datos del token decodificado como array asociativo
+        
         return (array) $decoded->data;
 
     } catch (ExpiredException $e) {
-        redirectToLogin('Sesión expirada. Por favor, inicia sesión de nuevo.');
+        if (isApiRequest()) {
+            sendAuthError('Sesión expirada.', 401);
+        } else {
+            redirectToLogin('Sesión expirada. Por favor, inicia sesión de nuevo.');
+        }
     } catch (SignatureInvalidException $e) {
-        error_log("Error de firma JWT: " . $e->getMessage()); // Log para errores de firma
-        redirectToLogin('Firma de sesión inválida. Por favor, inicia sesión de nuevo.');
+        error_log("Error de firma JWT: " . $e->getMessage());
+        if (isApiRequest()) {
+            sendAuthError('Firma de sesión inválida.', 401);
+        } else {
+            redirectToLogin('Firma de sesión inválida. Por favor, inicia sesión de nuevo.');
+        }
     } catch (Exception $e) {
         error_log("Error de verificación JWT general: " . $e->getMessage());
-        redirectToLogin('Token de sesión inválido. Por favor, inicia sesión de nuevo.');
+        if (isApiRequest()) {
+            sendAuthError('Token de sesión inválido.', 401);
+        } else {
+            redirectToLogin('Token de sesión inválido. Por favor, inicia sesión de nuevo.');
+        }
     }
 }
 
 // Ejecutar la verificación si la página actual no es la de login
 if (basename($_SERVER['PHP_SELF']) !== basename(LOGIN_URL)) {
-    $user_data = verifyJwtToken(); // Si es válido, $user_data estará aquí
+    $user_data = verifyJwtToken();
 }
