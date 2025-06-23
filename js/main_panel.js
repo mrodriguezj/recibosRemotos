@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // FUNCIÓN LOGOUT - Llama a la API de revocación de token
     window.logout = async () => {
         try {
-            const response = await fetch('api/auth/logout.php', { // URL a tu API de logout
+            const response = await fetch('logout.php', { // URL a tu API de logout
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
