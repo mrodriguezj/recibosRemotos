@@ -5,6 +5,7 @@
 // Asume que Database.php está en la raíz de tu proyecto o en el nivel de api/
 // require_once dirname(__DIR__) . '/Database.php'; // Si Database.php está en la raíz
 //require_once dirname(__DIR__, 2) . '/Database.php'; // Si Database.php está en la raíz y este script en api/clientes/
+require_once __DIR__ . '/auth_middleware.php'; // auth_middleware.php en la raíz
 require_once __DIR__ . '/database.php';
 
 // O si Database.php está en 'config/' y este script en 'api/clientes/':
